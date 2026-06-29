@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>AI Frontier — Market Strategy Game</title>
+<style>
+:root{
+  --bg:#0b1120;--surf:#131d2e;--surf2:#1a2740;--surf3:#213050;
+  --border:rgba(100,160,255,.12);--border-md:rgba(100,160,255,.22);
+  --text:#e8eef8;--text2:#8aa4c8;--text3:#4a6285;
+  --accent:#4f8ef7;--accent-dk:#2563eb;--accent-lt:rgba(79,142,247,.15);
+  --yellow:#f0b429;--yellow-bg:rgba(240,180,41,.1);--yellow-bd:rgba(240,180,41,.3);
+  --green:#34d399;--green-bg:rgba(52,211,153,.1);--red:#f87171;--red-bg:rgba(248,113,113,.1);
+  --r:8px;--R:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.screen{display:none;min-height:100vh}.screen.active{display:block}
+
+/* ── TOPBAR ── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surf);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50}
+.tl{font-size:15px;font-weight:800;background:linear-gradient(135deg,#4f8ef7,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.round-badge{background:var(--surf2);border:1px solid var(--border-md);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700;color:var(--text2)}
+.tb-btns{display:flex;gap:6px}
+.tb-btn{padding:5px 11px;border-radius:6px;border:1px solid var(--border-md);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;transition:all .15s}
+.tb-btn:hover{background:var(--surf2);color:var(--text)}
+
+/* ── WELCOME ── */
+#welcomeScreen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 50% 0%,rgba(79,142,247,.08) 0%,transparent 70%)}
+.wlc-wrap{max-width:860px;width:100%}
+.wlc-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-lt);border:1px solid var(--border-md);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--accent);font-weight:700;margin-bottom:18px}
+.wlc-title{font-size:44px;font-weight:900;line-height:1.05;margin-bottom:10px;background:linear-gradient(135deg,#e8eef8 0%,#4f8ef7 60%,#a78bfa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.wlc-sub{font-size:16px;color:var(--text2);margin-bottom:32px;max-width:580px;line-height:1.6}
+.co-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:28px}
+.co-card{border-radius:var(--R);padding:16px;cursor:pointer;border:2px solid var(--border);background:var(--surf);transition:all .2s;position:relative;overflow:hidden}
+.co-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--R) var(--R) 0 0}
+.co-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.4)}
+.co-card.on{border-color:var(--co-color,#4f8ef7);box-shadow:0 0 0 3px rgba(79,142,247,.2)}
+.co-card::before{background:var(--co-color,#4f8ef7)}
+.co-name{font-size:13px;font-weight:800;margin-bottom:2px;color:var(--text)}
+.co-tagline{font-size:10px;color:var(--text3);margin-bottom:10px;line-height:1.4}
+.co-stat{display:flex;justify-content:space-between;font-size:10px;margin-bottom:4px}
+.co-stat-l{color:var(--text3)}
+.co-bar-wrap{height:4px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:3px;overflow:hidden}
+.co-bar{height:100%;border-radius:2px;transition:width .5s}
+.co-budget{margin-top:8px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:10px;display:inline-block}
+.wlc-meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.wlc-meta-item{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;font-size:12px;color:var(--text2);flex:1;min-width:160px}
+.wlc-meta-item strong{color:var(--text);display:block;margin-bottom:2px}
+.start-btn{padding:14px 40px;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:all .18s;letter-spacing:.03em}
+.start-btn:hover{background:var(--accent-dk);transform:scale(1.02);box-shadow:0 6px 24px rgba(79,142,247,.35)}
+.diff-strip{display:flex;gap:6px;margin-bottom:20px}
+.ds-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-size:11px;font-weight:600;transition:all .15s}
+.ds-btn:hover{background:var(--surf2)}
+.ds-btn.on{background:var(--accent-lt);border-color:var(--accent);color:var(--accent)}
+
+/* ── GAME LAYOUT ── */
+#gameScreen{display:none}
+#gameScreen.active{display:block}
+.game-body{display:grid;grid-template-columns:220px 1fr 260px;min-height:calc(100vh - 49px)}
+
+/* LEFT: Company roster */
+.roster{background:var(--surf);border-right:1px solid var(--border);padding:12px;overflow-y:auto}
+.roster-lbl{font-size:9px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:10px}
+.co-roster{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.cr-item{border-radius:var(--r);padding:10px;border-left:3px solid;background:var(--surf2);position:relative}
+.cr-name{font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px;display:flex;align-items:center;gap:5px}
+.cr-you{font-size:9px;font-weight:700;background:var(--accent-lt);color:var(--accent);padding:1px 5px;border-radius:10px}
+.cr-share{font-size:18px;font-weight:800;color:var(--text);margin:4px 0 3px}
+.cr-share-lbl{font-size:9px;color:var(--text3)}
+.cr-bar-wrap{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;margin-top:4px}
+.cr-bar{height:100%;border-radius:2px;transition:width .8s cubic-bezier(.34,1.4,.64,1)}
+.cr-delta{position:absolute;top:8px;right:8px;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px}
+.cr-delta.pos{background:var(--green-bg);color:var(--green)}
+.cr-delta.neg{background:var(--red-bg);color:var(--red)}
+.cr-delta.neu{background:rgba(255,255,255,.06);color:var(--text3)}
+.trend-chart{background:var(--surf2);border-radius:var(--r);padding:8px}
+.tc-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text3);text-transform:uppercase;margin-bottom:6px}
+
+/* CENTER */
+.center-col{padding:16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+
+/* Phase header */
+.phase-hd{display:flex;align-items:center;gap:12px;background:var(--surf);border:1px solid var(--border);border-radius:var(--R);padding:14px 18px}
+.phase-icon{font-size:24px;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.phase-title{font-size:17px;font-weight:800;color:var(--text);margin-bottom:2px}
+.phase-sub{font-size:12px;color:var(--text2)}
+.phase-pills{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+.pp{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid}
+
+/* Budget allocation */
+.budget-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--R);padding:16px}
+.bc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.bc-title{font-size:13px;font-weight:700;color:var(--text)}
+.budget-remaining{font-size:20px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.budget-label{font-size:10px;color:var(--text3);text-align:right}
+.alloc-grid{display:flex;flex-direction:column;gap:10px}
+.alloc-row{background:var(--surf2);border-radius:var(--r);padding:11px 14px;border-left:3px solid}
+.ar-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.ar-name{font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px}
+.ar-icon{font-size:16px}
+.ar-val{font-size:14px;font-weight:800;color:var(--text);font-variant-numeric:tabular-nums}
+.ar-desc{font-size:10px;color:var(--text3);margin-bottom:7px;line-height:1.4}
+.ar-impact{font-size:10px;color:var(--text2);margin-top:4px}
+.ar-slider{display:flex;align-items:center;gap:8px}
+.sl-minus,.sl-plus{width:22px;height:22px;border-radius:50%;border:1px solid var(--border-md);background:var(--surf3);color:var(--text2);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;line-height:1}
+.sl-minus:hover,.sl-plus:hover{background:var(--surf3);border-color:var(--accent);color:var(--accent)}
+.sl-track{flex:1;height:6px;background:rgba(255,255,255,.08);border-radius:3px;position:relative;cursor:pointer}
+.sl-fill{height:100%;border-radius:3px;transition:width .15s}
+.preview-impact{background:var(--surf3);border-radius:var(--r);padding:10px 14px;border:1px solid var(--border);margin-top:2px}
+.pi-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;font-size:11px}
+.pi-label{color:var(--text3)}
+.pi-val{font-weight:700;color:var(--text2)}
+.pi-change{font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:5px}
+.pi-pos{background:var(--green-bg);color:var(--green)}
+.pi-neg{background:var(--red-bg);color:var(--red)}
+.submit-btn{width:100%;padding:12px;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s;margin-top:8px}
+.submit-btn:hover{background:var(--accent-dk)}
+.submit-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* Market segments */
+.seg-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--R);padding:14px}
+.seg-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.seg-row{margin-bottom:10px}
+.seg-name{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.sn-label{font-size:11px;color:var(--text2);display:flex;align-items:center;gap:5px}
+.sn-val{font-size:10px;color:var(--text3)}
+.seg-bar-wrap{height:14px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;display:flex;gap:1px}
+.seg-seg{height:100%;transition:width .8s cubic-bezier(.34,1.4,.64,1);position:relative}
+.seg-seg-lbl{position:absolute;right:3px;top:50%;transform:translateY(-50%);font-size:8px;font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap}
+
+/* RIGHT */
+.right-col{background:var(--surf);border-left:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+
+/* Event card */
+.event-card{border-radius:var(--R);padding:14px;border:1px solid;position:relative;overflow:hidden}
+.event-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.ev-type{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.ev-name{font-size:14px;font-weight:800;margin-bottom:7px;line-height:1.3}
+.ev-desc{font-size:11px;color:var(--text2);line-height:1.55;margin-bottom:9px}
+.ev-effects{display:flex;flex-direction:column;gap:4px}
+.ef-row{display:flex;align-items:center;gap:6px;font-size:11px}
+.ef-co{font-weight:700}
+.ef-dir{padding:1px 5px;border-radius:8px;font-size:10px;font-weight:700}
+.ef-pos{background:var(--green-bg);color:var(--green)}
+.ef-neg{background:var(--red-bg);color:var(--red)}
+.ef-neu{background:rgba(255,255,255,.06);color:var(--text3)}
+
+/* Intel panel */
+.intel-card{background:var(--surf2);border-radius:var(--r);padding:10px}
+.intel-head{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.intel-row{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;padding-bottom:5px;border-bottom:1px solid var(--border);align-items:center}
+.intel-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.ir-label{color:var(--text3)}
+.ir-val{font-weight:700;color:var(--text2)}
+
+/* Capability bars */
+.cap-card{background:var(--surf2);border-radius:var(--r);padding:10px}
+.cap-head{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;display:flex;justify-content:space-between}
+.cap-row{display:flex;align-items:center;gap:7px;margin-bottom:6px;font-size:10px}
+.cap-name{color:var(--text2);width:75px;flex-shrink:0}
+.cap-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.cap-bar{height:100%;border-radius:3px;transition:width .6s}
+.cap-val{color:var(--text3);width:26px;text-align:right;flex-shrink:0}
+
+/* Log */
+.log-card{background:var(--surf2);border-radius:var(--r);padding:10px;flex:1}
+.log-head{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);margin-bottom:6px}
+.log-body{font-size:10px;color:var(--text3);line-height:1.8;max-height:120px;overflow-y:auto}
+
+/* ── EVENT OVERLAY ── */
+.ev-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center}
+.ev-overlay.on{display:flex}
+.ev-overlay-box{background:var(--surf);border-radius:var(--R);max-width:460px;width:92%;border:1px solid var(--border-md);box-shadow:0 16px 64px rgba(0,0,0,.6);overflow:hidden;animation:evpop .35s cubic-bezier(.34,1.4,.64,1)}
+@keyframes evpop{0%{transform:scale(.88);opacity:0}100%{transform:none;opacity:1}}
+.evo-head{padding:16px 20px 12px;border-bottom:1px solid var(--border)}
+.evo-type{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px}
+.evo-title{font-size:20px;font-weight:900;color:var(--text)}
+.evo-body{padding:16px 20px}
+.evo-desc{font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:14px}
+.evo-effects{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.evo-ef{display:flex;align-items:flex-start;gap:8px;background:var(--surf2);border-radius:var(--r);padding:9px 11px}
+.evo-ef-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.evo-ef-body{flex:1}
+.evo-ef-name{font-size:12px;font-weight:700;margin-bottom:2px}
+.evo-ef-desc{font-size:11px;color:var(--text2);line-height:1.4}
+.evo-q{background:var(--yellow-bg);border:1px solid var(--yellow-bd);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--yellow);line-height:1.55;margin-bottom:14px}
+.evo-close{width:100%;padding:11px;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.evo-close:hover{background:var(--accent-dk)}
+
+/* ── RESULT OVERLAY ── */
+.result-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center}
+.result-overlay.on{display:flex}
+.ro-box{background:var(--surf);border-radius:var(--R);max-width:520px;width:95%;border:1px solid var(--border-md);box-shadow:0 16px 64px rgba(0,0,0,.6);overflow:hidden;animation:evpop .35s cubic-bezier(.34,1.4,.64,1)}
+.ro-head{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.ro-title{font-size:17px;font-weight:800;color:var(--text)}
+.ro-round{font-size:11px;color:var(--text3)}
+.ro-body{padding:16px 20px}
+.ro-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.ro-row{display:grid;grid-template-columns:140px 1fr 60px;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);background:var(--surf2)}
+.ro-co{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px}
+.ro-bar-wrap{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.ro-bar{height:100%;border-radius:4px;transition:width .8s}
+.ro-pct{font-size:13px;font-weight:800;text-align:right}
+.ro-insight{background:var(--yellow-bg);border:1px solid var(--yellow-bd);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--yellow);line-height:1.6;margin-bottom:14px}
+.ro-next{width:100%;padding:11px;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:background .15s}
+.ro-next:hover{background:var(--accent-dk)}
+
+/* ── END GAME ── */
+#endScreen{display:none}
+#endScreen.active{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 50% 30%,rgba(79,142,247,.1) 0%,transparent 70%)}
+.end-box{max-width:600px;width:100%;text-align:center}
+.end-title{font-size:36px;font-weight:900;margin-bottom:6px;background:linear-gradient(135deg,#e8eef8,#4f8ef7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.end-sub{font-size:15px;color:var(--text2);margin-bottom:24px;line-height:1.6}
+.end-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.end-row{display:grid;grid-template-columns:160px 1fr 80px;gap:10px;align-items:center;padding:10px 14px;border-radius:var(--r);background:var(--surf);border:1px solid var(--border)}
+.end-row.winner{border-color:var(--yellow);background:var(--yellow-bg)}
+.end-trophy{font-size:16px;width:28px;text-align:center}
+.end-co{font-size:13px;font-weight:700}
+.end-bar-wrap{height:10px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden}
+.end-bar{height:100%;border-radius:5px}
+.end-pct{font-size:16px;font-weight:800;text-align:right}
+.end-debrief{background:var(--surf);border:1px solid var(--border);border-radius:var(--R);padding:18px;text-align:left;margin-bottom:20px}
+.ed-head{font-size:12px;font-weight:700;color:var(--accent);margin-bottom:10px;letter-spacing:.05em;text-transform:uppercase}
+.ed-q{font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px;padding-left:10px;border-left:2px solid var(--accent-lt)}
+.play-again{padding:12px 32px;background:var(--accent);border:none;border-radius:var(--r);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:all .18s}
+.play-again:hover{background:var(--accent-dk)}
+
+/* Mobile */
+@media(max-width:780px){
+  .game-body{grid-template-columns:1fr;grid-template-rows:auto}
+  .roster,.right-col{display:none}
+  .co-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ WELCOME ══════════════════════════════════════════════════════════════ -->
+<div class="screen active" id="welcomeScreen">
+<div class="wlc-wrap">
+  <div class="wlc-badge">🚀 AI Strategy Simulation · Resource-Constrained Market</div>
+  <div class="wlc-title">AI Frontier</div>
+  <div class="wlc-sub">You lead an AI company competing for market dominance in 6 quarterly rounds. Allocate limited R&D, product, and GTM budgets. Navigate market events. Watch your decisions ripple through the competitive landscape.</div>
+
+  <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Choose difficulty</div>
+  <div class="diff-strip">
+    <button class="ds-btn on" data-diff="normal" onclick="pickDiff('normal',this)">Normal — competitors are rational</button>
+    <button class="ds-btn" data-diff="hard" onclick="pickDiff('hard',this)">Hard — competitors are aggressive</button>
+    <button class="ds-btn" data-diff="sandbox" onclick="pickDiff('sandbox',this)">Sandbox — control all companies</button>
+  </div>
+
+  <div style="font-size:10px;font-weight:700;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:10px">Choose your company</div>
+  <div class="co-grid" id="coGrid"></div>
+
+  <div class="wlc-meta">
+    <div class="wlc-meta-item"><strong>6 quarterly rounds</strong>Q1–Q2 of an 18-month AI market cycle</div>
+    <div class="wlc-meta-item"><strong>5 market segments</strong>Enterprise, Developer, Consumer, Gov't, Healthcare</div>
+    <div class="wlc-meta-item"><strong>4 investment areas</strong>Research, Product, GTM, Safety/Compliance</div>
+    <div class="wlc-meta-item"><strong>Market events</strong>Breakthroughs, regulation, partnerships, backlash</div>
+  </div>
+
+  <button class="start-btn" onclick="startGame()">Enter the Market →</button>
+</div>
+</div>
+
+<!-- ══ GAME ═════════════════════════════════════════════════════════════════ -->
+<div class="screen" id="gameScreen">
+  <div class="topbar">
+    <div class="tl">AI Frontier</div>
+    <div class="round-badge" id="roundBadge">Round 1 of 6 · Q1</div>
+    <div class="tb-btns">
+      <button class="tb-btn" onclick="goHome()">← Menu</button>
+    </div>
+  </div>
+
+  <div class="game-body">
+    <!-- LEFT: Roster -->
+    <div class="roster">
+      <div class="roster-lbl">Market Share</div>
+      <div class="co-roster" id="coRoster"></div>
+      <div class="trend-chart">
+        <div class="tc-lbl">Share trend</div>
+        <canvas id="trendCanvas" height="80" style="width:100%;display:block"></canvas>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center-col">
+      <div class="phase-hd">
+        <div class="phase-icon" id="phaseIcon" style="background:rgba(79,142,247,.15)">💰</div>
+        <div>
+          <div class="phase-title" id="phaseTitle">Strategy Phase</div>
+          <div class="phase-sub" id="phaseSub">Allocate your budget across the four investment areas. Every unit you spend shifts the competitive landscape.</div>
+        </div>
+        <div class="phase-pills" id="phasePills"></div>
+      </div>
+
+      <!-- Budget allocation -->
+      <div class="budget-card" id="budgetCard">
+        <div class="bc-head">
+          <div class="bc-title">Budget allocation — <span id="coNameInGame">Anthropic</span></div>
+          <div><div class="budget-remaining" id="budgetRemaining">80</div><div class="budget-label">units remaining</div></div>
+        </div>
+        <div class="alloc-grid" id="allocGrid"></div>
+        <div class="preview-impact" id="previewImpact"></div>
+        <button class="submit-btn" id="submitBtn" onclick="submitRound()">Commit Strategy →</button>
+      </div>
+
+      <!-- Market segments -->
+      <div class="seg-card">
+        <div class="seg-title">📊 Market segments — current share</div>
+        <div id="segRows"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-col">
+      <div class="event-card" id="currentEventCard" style="display:none"></div>
+
+      <div class="intel-card">
+        <div class="intel-head">Your position</div>
+        <div id="intelRows"></div>
+      </div>
+
+      <div class="cap-card">
+        <div class="cap-head"><span>Capability scores</span></div>
+        <div id="capRows"></div>
+      </div>
+
+      <div class="log-card">
+        <div class="log-head">Round log</div>
+        <div class="log-body" id="logBody">Game started…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EVENT OVERLAY ════════════════════════════════════════════════════════ -->
+<div class="ev-overlay" id="evOverlay">
+  <div class="ev-overlay-box">
+    <div class="evo-head">
+      <div class="evo-type" id="evoType">MARKET EVENT</div>
+      <div class="evo-title" id="evoTitle">Event Title</div>
+    </div>
+    <div class="evo-body">
+      <div class="evo-desc" id="evoDesc"></div>
+      <div class="evo-effects" id="evoEffects"></div>
+      <div class="evo-q" id="evoQ"></div>
+      <button class="evo-close" onclick="closeEvent()">See market impact →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ROUND RESULTS ════════════════════════════════════════════════════════ -->
+<div class="result-overlay" id="resultOverlay">
+  <div class="ro-box">
+    <div class="ro-head">
+      <div class="ro-title" id="roTitle">Round 1 Results</div>
+      <div class="ro-round" id="roRound">Q1 2024</div>
+    </div>
+    <div class="ro-body">
+      <div class="ro-rows" id="roRows"></div>
+      <div class="ro-insight" id="roInsight"></div>
+      <button class="ro-next" id="roNext" onclick="nextRound()">Next quarter →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ END GAME ══════════════════════════════════════════════════════════════ -->
+<div class="screen" id="endScreen">
+  <div class="end-box">
+    <div class="end-title" id="endTitle">Game Over</div>
+    <div class="end-sub" id="endSub"></div>
+    <div class="end-rows" id="endRows"></div>
+    <div class="end-debrief" id="endDebrief"></div>
+    <button class="play-again" onclick="location.reload()">Play again</button>
+  </div>
+</div>
+
+<script>
+// ── COMPANY DATA ─────────────────────────────────────────────────────────────
+const COMPANIES = [
+  {id:'anthropic', name:'Anthropic', icon:'🔬', color:'#0ea5e9', tagline:'Safety-first frontier AI. Constitutional AI, RLHF research. Mission-constrained.',
+   stats:{research:75,product:50,gtm:30,safety:92,ecosystem:35},
+   budget:80, budgetLabel:'$400M/q (constrained)',
+   advantage:'Safety score never drops below 60. +15 to compliance-gated segments.',
+   constraint:'Cannot invest >30 in GTM per round (mission constraint).'},
+  {id:'openai', name:'OpenAI / MSFT', icon:'⚡', color:'#22c55e', tagline:'ChatGPT + Azure. Largest installed base, aggressive distribution.',
+   stats:{research:88,product:90,gtm:95,safety:62,ecosystem:88},
+   budget:140, budgetLabel:'$2B+/q (Microsoft-backed)',
+   advantage:'+20% to consumer and developer segment base share.',
+   constraint:'Safety incidents cost double market share.'},
+  {id:'google', name:'Google / DeepMind', icon:'🌐', color:'#f59e0b', tagline:'Search distribution, Gemini, TPUs. Enterprise relationships.',
+   stats:{research:85,product:75,gtm:88,safety:68,ecosystem:92},
+   budget:130, budgetLabel:'$1.8B+/q (Alphabet-backed)',
+   advantage:'+20% enterprise segment base. Search distribution bonus.',
+   constraint:'Regulatory scrutiny: safety incidents escalate faster.'},
+  {id:'meta', name:'Meta AI', icon:'🔓', color:'#a78bfa', tagline:'Open-source strategy. Llama models. Social distribution at scale.',
+   stats:{research:72,product:60,gtm:82,safety:52,ecosystem:70},
+   budget:110, budgetLabel:'$1.2B+/q (Zuckerberg-backed)',
+   advantage:'Open-source releases boost ecosystem +15. No compliance gates.',
+   constraint:'Cannot access gov\'t/healthcare segments without safety investment.'},
+  {id:'startup', name:'Vertical AI Co.', icon:'🚀', color:'#f97316', tagline:'Focused, agile, deeply embedded in one vertical. Acquisition target.',
+   stats:{research:52,product:68,gtm:45,safety:74,ecosystem:28},
+   budget:50, budgetLabel:'$80M/q (Series B)',
+   advantage:'+35% in chosen vertical. Acquisition offer possible Round 4+.',
+   constraint:'Cannot compete in enterprise/consumer directly — must win vertical.'}
+];
+
+const SEGMENTS = [
+  {id:'enterprise', name:'Enterprise AI', size:30, icon:'🏢', req:'safety', desc:'Requires compliance and track record. High ACV, long sales cycle.'},
+  {id:'developer', name:'Developer / API', size:22, icon:'⚡', req:'research', desc:'Requires capability lead. Developers follow the best model.'},
+  {id:'consumer', name:'Consumer AI', size:25, icon:'👤', req:'product', desc:'Requires product quality and distribution. Winner-takes-most.'},
+  {id:'government', name:'Gov\'t / Public Sector', size:13, icon:'🏛️', req:'compliance', desc:'Requires safety + partnerships. Long procurement cycles.'},
+  {id:'healthcare', name:'Healthcare AI', size:10, icon:'🏥', req:'safety+research', desc:'Requires both safety AND research scores. Regulated. High margin.'}
+];
+
+const INVEST_AREAS = [
+  {id:'research', name:'Frontier Research', icon:'🔬', color:'#4f8ef7',
+   desc:'Advance model capability. Enables breakthroughs and capability leads.',
+   impact:'Raises capability score. Unlocks developer & healthcare segments.',
+   stat:'research', min:5, max:50},
+  {id:'product', name:'Product & UX', icon:'🎨', color:'#34d399',
+   desc:'Improve product quality, user experience, retention, and interface.',
+   impact:'Raises product score. Critical for consumer segment share.',
+   stat:'product', min:5, max:50},
+  {id:'gtm', name:'GTM & Distribution', icon:'📈', color:'#f0b429',
+   desc:'Sales, marketing, partnerships, distribution channels.',
+   impact:'Raises GTM score. Accelerates market penetration across all segments.',
+   stat:'gtm', min:0, max:50},
+  {id:'safety', name:'Safety & Compliance', icon:'🛡️', color:'#f87171',
+   desc:'Safety research, red-teaming, regulatory compliance, audits.',
+   impact:'Raises safety score. Required for gov\'t and healthcare. Reduces incident risk.',
+   stat:'safety', min:0, max:35}
+];
+
+const EVENTS = [
+  {id:'breakthrough',title:'🧬 Frontier Breakthrough',type:'CAPABILITY RACE',
+   desc:'A major capability milestone was reached — GPT-level reasoning on a new domain. The leading research company publishes a paper; others scramble to replicate.',
+   question:'When one company achieves a breakthrough, should they publish? What happens to the market when they do?',
+   effects:{research:{+20:'leading research co'},all:{-5:'all others research gap'}}},
+  {id:'regulation',title:'⚖️ EU AI Act Enforcement',type:'REGULATORY EVENT',
+   desc:'The EU begins enforcing the AI Act. Companies with safety scores below 65 lose access to European enterprise markets for one quarter.',
+   question:'How do safety scores function as market barriers? Who benefits from stricter regulation?',
+   effects:{safety_penalty:{threshold:65,penalty:'enterprise segment locked for 1 round'}}},
+  {id:'open_source',title:'🔓 Open-Source Model Release',type:'ECOSYSTEM SHIFT',
+   desc:'Meta releases a powerful open-weight model. Developer ecosystem immediately shifts — anyone can now access near-frontier capability for free.',
+   question:'What happens to the market when the capability floor rises for everyone? Who loses most?',
+   effects:{meta:{+15:'ecosystem'},developer_all:{-10:'API pricing power for all'}}},
+  {id:'enterprise_breach',title:'🔒 High-Profile AI Incident',type:'TRUST CRISIS',
+   desc:'A major enterprise AI deployment fails publicly. Procurement freezes across the sector. Safety scores matter twice as much this quarter.',
+   question:'How does one company\'s incident affect the whole sector? What is collective reputation risk?',
+   effects:{low_safety:{-15:'enterprise segment if safety < 65'},safety_bonus:{+10:'enterprise if safety > 80'}}},
+  {id:'hyperscaler',title:'🌩️ Hyperscaler Infrastructure Push',type:'PLATFORM WAR',
+   desc:'AWS, Azure, and GCP all announce new AI-specific infrastructure tiers. Companies with strong ecosystem scores get preferential pricing and distribution.',
+   question:'How does infrastructure access shape the AI market? What do hyperscalers gain from this?',
+   effects:{ecosystem_bonus:{+20:'market share for ecosystem > 70'}}},
+  {id:'talent_war',title:'🧑‍💻 AI Talent Crunch',type:'LABOR MARKET',
+   desc:'AI researchers are scarce. Companies with lower research budgets lose 1-2 researchers to higher-paying competitors. Research scores drop for underfunded teams.',
+   question:'How does the concentration of AI talent shape who can be competitive? Is this a market failure?',
+   effects:{low_research_budget:{-10:'research score if research investment < 15'}}},
+  {id:'government_contract',title:'🏛️ Federal AI Procurement Cycle',type:'GOVERNMENT',
+   desc:'A major federal AI contract opens. Companies with safety + compliance scores above 75 AND partnerships above 60 are eligible to bid.',
+   question:'What kinds of companies can win government contracts? What does that do to the market?',
+   effects:{compliant:{+25:'gov\'t segment for eligible companies'},ineligible:{0:'others locked out'}}},
+  {id:'consumer_backlash',title:'📉 Consumer Trust Collapse',type:'MARKET SENTIMENT',
+   desc:'A wave of deepfakes and AI-generated misinformation triggers mainstream media backlash. Consumer segment share drops 15% across the board for 1 round.',
+   question:'What is the relationship between AI harms and market outcomes? Does the market self-correct?',
+   effects:{all_consumer:{-15:'consumer segment all companies'}}},
+  {id:'partnership',title:'🤝 Strategic Partnership Mega-Deal',type:'ECOSYSTEM',
+   desc:'A major tech platform announces an exclusive AI partnership. The chosen company gains massive distribution; competitors must build alternative channels.',
+   question:'What happens when distribution is gated by a single platform relationship?',
+   effects:{winner:{+30:'GTM and ecosystem score'},others:{-10:'GTM efficiency'}}},
+  {id:'model_commoditization',title:'📦 Model API Commoditization',type:'PRICING PRESSURE',
+   desc:'A price war breaks out in AI API pricing. Developer segment share now depends almost entirely on research (capability) rather than GTM (price/marketing).',
+   question:'What happens when a market commoditizes? Who survives? Who doesn\'t?',
+   effects:{developer:{research_only:'GTM ignored in developer segment this round'}}},
+  {id:'agi_rumor',title:'🌌 AGI Timeline Rumor',type:'MARKET SIGNAL',
+   desc:'A leaked memo suggests a leading company is closer to AGI than publicly disclosed. All companies\' valuations shift; enterprise customers pause procurement.',
+   question:'How do information asymmetries shape competitive dynamics? What is the strategic value of opacity?',
+   effects:{enterprise_all:{-10:'enterprise share (procurement freeze)'},research_leader:{+20:'developer and gov\'t share'}}}
+];
+
+const QUARTERS = ['Q1 2024','Q2 2024','Q3 2024','Q4 2024','Q1 2025','Q2 2025'];
+const INSIGHTS = [
+  r=>`Round ${r} complete. ${r<3?'Early market dynamics — distribution advantages matter most.':r<5?'Mid-game: capability differentiation becomes critical.':'Late game — trust and safety scores determine enterprise access.'}`,
+  r=>`Market share is becoming sticky — companies with >35% share get +5% retention bonus next round.`,
+  r=>`The gap between highest and lowest research score is widening. Underfunded research teams fall further behind each quarter.`,
+  r=>`Enterprise customers are the most loyal. Winning enterprise share now compounds over the remaining rounds.`
+];
+
+const DEBRIEF_QS = [
+  'Which investment area had the highest ROI? Did that match your prediction at the start?',
+  'When did a market event force you to pivot? How did you respond?',
+  'Which company was hardest to compete against — and why? Was it budget, strategy, or events?',
+  'If you were advising a real AI company in a resource-constrained environment, what would you change about how they allocate investment?',
+  'What did the market events reveal about the relationship between AI capability, safety, and market share that surprised you?'
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let playerCoId = 'anthropic';
+let difficulty = 'normal';
+let round = 1;
+let companies = {}; // live state
+let shareHistory = {}; // co_id -> [share per round]
+let logs = [];
+let allocation = {}; // current round allocation
+let pendingEvent = null;
+let roundQuarters = [...QUARTERS];
+
+// ── WELCOME ───────────────────────────────────────────────────────────────────
+function buildWelcome(){
+  const el = document.getElementById('coGrid');
+  el.innerHTML = '';
+  COMPANIES.forEach(co => {
+    const card = document.createElement('div');
+    card.className = 'co-card' + (co.id === playerCoId ? ' on' : '');
+    card.style.setProperty('--co-color', co.color);
+    card.innerHTML = `
+      <div class="co-name">${co.icon} ${co.name}</div>
+      <div class="co-tagline">${co.tagline}</div>
+      ${Object.entries({Research:co.stats.research,Product:co.stats.product,GTM:co.stats.gtm,Safety:co.stats.safety}).map(([k,v])=>`
+        <div class="co-stat"><span class="co-stat-l">${k}</span><span>${v}</span></div>
+        <div class="co-bar-wrap"><div class="co-bar" style="width:${v}%;background:${co.color}"></div></div>
+      `).join('')}
+      <div class="co-budget" style="background:${co.color}22;color:${co.color};border:1px solid ${co.color}44">${co.budgetLabel}</div>
+    `;
+    card.onclick = () => {
+      playerCoId = co.id;
+      document.querySelectorAll('.co-card').forEach(c => c.classList.remove('on'));
+      card.classList.add('on');
+    };
+    el.appendChild(card);
+  });
+}
+function pickDiff(d, btn){
+  difficulty = d;
+  document.querySelectorAll('.ds-btn').forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+
+// ── INIT GAME ─────────────────────────────────────────────────────────────────
+function startGame(){
+  // Deep clone company stats
+  companies = {};
+  COMPANIES.forEach(co => {
+    companies[co.id] = {
+      ...co,
+      stats: {...co.stats},
+      share: {enterprise:0, developer:0, consumer:0, government:0, healthcare:0},
+      totalShare: 0,
+      budget: co.budget,
+      regulationLocked: false,
+      eventEffect: {}
+    };
+  });
+  // Distribute initial market share based on stats
+  initMarketShare();
+  COMPANIES.forEach(co => shareHistory[co.id] = [companies[co.id].totalShare]);
+
+  document.getElementById('welcomeScreen').classList.remove('active');
+  document.getElementById('gameScreen').classList.add('active');
+  renderGame();
+}
+
+function initMarketShare(){
+  SEGMENTS.forEach(seg => {
+    let total = 0;
+    const scores = {};
+    COMPANIES.forEach(co => {
+      const s = computeSegmentScore(co.id, seg.id);
+      scores[co.id] = s;
+      total += s;
+    });
+    COMPANIES.forEach(co => {
+      companies[co.id].share[seg.id] = total > 0 ? (scores[co.id] / total) * seg.size : seg.size / COMPANIES.length;
+    });
+  });
+  updateTotalShare();
+}
+
+function computeSegmentScore(coId, segId){
+  const co = companies[coId];
+  const s = co.stats;
+  let score = 0;
+  if(segId === 'enterprise') score = s.safety * 0.5 + s.gtm * 0.3 + s.product * 0.2;
+  else if(segId === 'developer') score = s.research * 0.6 + s.product * 0.25 + s.gtm * 0.15;
+  else if(segId === 'consumer') score = s.product * 0.5 + s.gtm * 0.4 + s.research * 0.1;
+  else if(segId === 'government') score = s.safety * 0.55 + s.ecosystem * 0.3 + s.gtm * 0.15;
+  else if(segId === 'healthcare') score = (s.safety + s.research) / 2 * 0.7 + s.product * 0.3;
+  // Company-specific bonuses
+  if(coId === 'anthropic' && (segId === 'enterprise' || segId === 'government')) score *= 1.2;
+  if(coId === 'openai' && (segId === 'consumer' || segId === 'developer')) score *= 1.25;
+  if(coId === 'google' && segId === 'enterprise') score *= 1.25;
+  if(coId === 'meta' && segId === 'developer') score *= 1.15;
+  if(coId === 'startup') score *= segId === 'developer' ? 1.3 : 0.6;
+  if(co.regulationLocked && segId === 'enterprise') score *= 0.1;
+  return Math.max(0, score);
+}
+
+function updateTotalShare(){
+  COMPANIES.forEach(co => {
+    companies[co.id].totalShare = Object.values(companies[co.id].share).reduce((a,b) => a+b, 0);
+  });
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderGame(){
+  const playerCo = COMPANIES.find(c => c.id === playerCoId);
+  const pState = companies[playerCoId];
+
+  // Round badge
+  document.getElementById('roundBadge').textContent = `Round ${round} of 6 · ${QUARTERS[round-1]}`;
+  document.getElementById('coNameInGame').textContent = playerCo.name;
+
+  // Budget remaining
+  const spent = Object.values(allocation).reduce((a,b)=>a+b,0);
+  const rem = pState.budget - spent;
+  document.getElementById('budgetRemaining').textContent = rem;
+
+  // Allocation grid
+  buildAllocGrid(playerCo, pState, rem);
+
+  // Roster
+  renderRoster();
+
+  // Segments
+  renderSegments();
+
+  // Intel panel
+  renderIntel(playerCo, pState);
+
+  // Capability bars
+  renderCaps(pState);
+
+  // Preview
+  renderPreview(playerCo, pState);
+
+  // Trend chart
+  drawTrend();
+}
+
+function buildAllocGrid(co, state, remaining){
+  const el = document.getElementById('allocGrid');
+  el.innerHTML = '';
+  INVEST_AREAS.forEach(area => {
+    if(area.id === 'gtm' && co.id === 'anthropic' && (allocation[area.id]||0) > 30){
+      allocation[area.id] = 30;
+    }
+    const val = allocation[area.id] || 10;
+    const row = document.createElement('div');
+    row.className = 'alloc-row';
+    row.style.borderColor = area.color;
+    row.innerHTML = `
+      <div class="ar-head">
+        <div class="ar-name"><span class="ar-icon">${area.icon}</span>${area.name}</div>
+        <div class="ar-val" id="av_${area.id}">${val}</div>
+      </div>
+      <div class="ar-desc">${area.desc}</div>
+      <div class="ar-slider">
+        <div class="sl-minus" onclick="adjustAlloc('${area.id}',-5)">−</div>
+        <div class="sl-track" id="st_${area.id}" onclick="sliderClick(event,'${area.id}')">
+          <div class="sl-fill" id="sf_${area.id}" style="width:${val/50*100}%;background:${area.color}"></div>
+        </div>
+        <div class="sl-plus" onclick="adjustAlloc('${area.id}',+5)">+</div>
+      </div>
+      <div class="ar-impact" style="color:${area.color}">${area.impact}</div>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function adjustAlloc(id, delta){
+  const co = COMPANIES.find(c => c.id === playerCoId);
+  const cur = allocation[id] || 10;
+  const area = INVEST_AREAS.find(a => a.id === id);
+  let next = Math.max(area.min, Math.min(area.max, cur + delta));
+  // Anthropic GTM constraint
+  if(id === 'gtm' && co.id === 'anthropic') next = Math.min(30, next);
+  const otherSpent = Object.entries(allocation).filter(([k])=>k!==id).reduce((a,[,v])=>a+v,0);
+  const budget = companies[playerCoId].budget;
+  if(otherSpent + next > budget) next = budget - otherSpent;
+  allocation[id] = Math.max(area.min, next);
+  document.getElementById('av_'+id).textContent = allocation[id];
+  document.getElementById('sf_'+id).style.width = (allocation[id]/50*100)+'%';
+  const rem = budget - Object.values(allocation).reduce((a,b)=>a+b,0);
+  document.getElementById('budgetRemaining').textContent = Math.max(0,rem);
+  renderPreview(co, companies[playerCoId]);
+}
+
+function sliderClick(e, id){
+  const track = e.currentTarget;
+  const rect = track.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  const val = Math.round((pct * 50) / 5) * 5;
+  const oldVal = allocation[id] || 10;
+  allocation[id] = oldVal;
+  adjustAlloc(id, val - oldVal);
+}
+
+function renderPreview(co, state){
+  const el = document.getElementById('previewImpact');
+  const spent = Object.values(allocation).reduce((a,b)=>a+b,0);
+  const rem = state.budget - spent;
+  el.innerHTML = `
+    <div class="pi-row"><span class="pi-label">Budget used</span><span class="pi-val">${spent} / ${state.budget} units <span class="pi-change ${rem>=0?'pi-pos':'pi-neg'}">${rem>=0?rem+' remaining':'OVER by '+(-rem)}</span></span></div>
+    ${INVEST_AREAS.map(a=>{
+      const gain = Math.round((allocation[a.id]||10)/10*3);
+      return `<div class="pi-row"><span class="pi-label">${a.icon} ${a.name}</span><span class="pi-val">${a.id === 'research'?state.stats.research:a.id==='product'?state.stats.product:a.id==='gtm'?state.stats.gtm:state.stats.safety} → ${Math.min(100,(a.id==='research'?state.stats.research:a.id==='product'?state.stats.product:a.id==='gtm'?state.stats.gtm:state.stats.safety)+gain)} <span class="pi-change pi-pos">+${gain}</span></span></div>`;
+    }).join('')}
+  `;
+}
+
+function renderRoster(){
+  const el = document.getElementById('coRoster');
+  el.innerHTML = '';
+  const sorted = [...COMPANIES].sort((a,b) => companies[b.id].totalShare - companies[a.id].totalShare);
+  sorted.forEach((co, rank) => {
+    const state = companies[co.id];
+    const prev = shareHistory[co.id];
+    const delta = prev.length > 1 ? state.totalShare - prev[prev.length-2] : 0;
+    const item = document.createElement('div');
+    item.className = 'cr-item';
+    item.style.borderColor = co.color;
+    const deltaClass = delta > 0.5 ? 'pos' : delta < -0.5 ? 'neg' : 'neu';
+    const deltaText = delta > 0 ? '+'+delta.toFixed(1)+'%' : delta < 0 ? delta.toFixed(1)+'%' : '—';
+    item.innerHTML = `
+      <div class="cr-name">${co.icon} ${co.name.split('/')[0].trim()}${co.id===playerCoId?'<span class="cr-you">YOU</span>':''}</div>
+      <div class="cr-share">${state.totalShare.toFixed(1)}%</div>
+      <div class="cr-share-lbl">market share</div>
+      <div class="cr-bar-wrap"><div class="cr-bar" style="width:${state.totalShare/40*100}%;background:${co.color}"></div></div>
+      <div class="cr-delta ${deltaClass}">${deltaText}</div>
+    `;
+    el.appendChild(item);
+  });
+}
+
+function renderSegments(){
+  const el = document.getElementById('segRows');
+  el.innerHTML = '';
+  SEGMENTS.forEach(seg => {
+    const row = document.createElement('div');
+    row.className = 'seg-row';
+    const total = COMPANIES.reduce((a,co)=>a+companies[co.id].share[seg.id],0);
+    row.innerHTML = `
+      <div class="seg-name">
+        <span class="sn-label">${seg.icon} ${seg.name}</span>
+        <span class="sn-val">${seg.size}% of market</span>
+      </div>
+      <div class="seg-bar-wrap">
+        ${COMPANIES.map(co => {
+          const w = total>0 ? (companies[co.id].share[seg.id]/total*100) : 20;
+          return `<div class="seg-seg" style="width:${w.toFixed(1)}%;background:${co.color}" title="${co.name}: ${companies[co.id].share[seg.id].toFixed(1)}%"><span class="seg-seg-lbl">${co.icon}</span></div>`;
+        }).join('')}
+      </div>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function renderIntel(co, state){
+  const el = document.getElementById('intelRows');
+  el.innerHTML = `
+    <div class="intel-row"><span class="ir-label">Company</span><span class="ir-val">${co.icon} ${co.name}</span></div>
+    <div class="intel-row"><span class="ir-label">Market share</span><span class="ir-val">${state.totalShare.toFixed(1)}%</span></div>
+    <div class="intel-row"><span class="ir-label">Budget / round</span><span class="ir-val">${state.budget} units</span></div>
+    <div class="intel-row"><span class="ir-label">Advantage</span><span class="ir-val" style="font-size:10px;color:var(--green)">${co.advantage}</span></div>
+    <div class="intel-row"><span class="ir-label">Constraint</span><span class="ir-val" style="font-size:10px;color:var(--red)">${co.constraint}</span></div>
+  `;
+}
+
+function renderCaps(state){
+  const el = document.getElementById('capRows');
+  const areas = [
+    {n:'Research', v:state.stats.research, c:'#4f8ef7'},
+    {n:'Product',  v:state.stats.product,  c:'#34d399'},
+    {n:'GTM',      v:state.stats.gtm,      c:'#f0b429'},
+    {n:'Safety',   v:state.stats.safety,   c:'#f87171'},
+    {n:'Ecosystem',v:state.stats.ecosystem,c:'#a78bfa'}
+  ];
+  el.innerHTML = areas.map(a=>`
+    <div class="cap-row">
+      <span class="cap-name">${a.n}</span>
+      <div class="cap-bar-wrap"><div class="cap-bar" style="width:${a.v}%;background:${a.c}"></div></div>
+      <span class="cap-val">${a.v}</span>
+    </div>
+  `).join('');
+}
+
+function drawTrend(){
+  const cv = document.getElementById('trendCanvas');
+  if(!cv) return;
+  const dpr = window.devicePixelRatio||1;
+  const w = cv.parentElement.clientWidth - 20 || 180;
+  cv.width = w*dpr; cv.height = 80*dpr; cv.style.width = w+'px'; cv.style.height = '80px';
+  const ctx = cv.getContext('2d'); ctx.scale(dpr,dpr);
+  ctx.clearRect(0,0,w,80);
+  const maxR = Math.max(...Object.values(shareHistory).map(h=>Math.max(...h)));
+  COMPANIES.forEach(co => {
+    const hist = shareHistory[co.id];
+    if(hist.length < 2) return;
+    ctx.beginPath();
+    hist.forEach((v,i) => {
+      const x = i/(hist.length-1||1)*(w-8)+4;
+      const y = 75 - (v/maxR)*68;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.strokeStyle = co.color; ctx.lineWidth = co.id===playerCoId?2:1.2;
+    ctx.globalAlpha = co.id===playerCoId?1:0.55;
+    ctx.stroke(); ctx.globalAlpha=1;
+  });
+}
+
+function addLog(msg){ logs.unshift(msg); if(logs.length>30)logs.pop(); const el=document.getElementById('logBody');if(el)el.innerHTML=logs.slice(0,15).join('<br>'); }
+
+// ── SUBMIT ROUND ──────────────────────────────────────────────────────────────
+function submitRound(){
+  // Apply player's allocation
+  const pState = companies[playerCoId];
+  INVEST_AREAS.forEach(area => {
+    const inv = allocation[area.id] || 10;
+    const gain = Math.round(inv / 10 * 3);
+    pState.stats[area.stat] = Math.min(100, pState.stats[area.stat] + gain);
+  });
+  addLog(`R${round}: You invested — Research:${allocation.research||10} Product:${allocation.product||10} GTM:${allocation.gtm||10} Safety:${allocation.safety||10}`);
+
+  // AI companies allocate
+  COMPANIES.filter(co => co.id !== playerCoId).forEach(co => {
+    const state = companies[co.id];
+    const budget = co.budget;
+    // AI strategy: weight towards weakest stat, with randomness
+    const weights = INVEST_AREAS.map(area => {
+      const statVal = state.stats[area.stat];
+      const urgency = (100 - statVal) / 100;
+      const random = difficulty === 'hard' ? 0.1 : 0.3;
+      return urgency * (1-random) + Math.random() * random;
+    });
+    const totalW = weights.reduce((a,b)=>a+b,0);
+    let remaining = budget;
+    INVEST_AREAS.forEach((area, i) => {
+      const inv = Math.max(area.min, Math.round((weights[i]/totalW) * budget / 5) * 5);
+      const gain = Math.round(Math.min(inv, remaining) / 10 * 2.5);
+      state.stats[area.stat] = Math.min(100, state.stats[area.stat] + gain);
+      remaining -= inv;
+    });
+    addLog(`R${round}: ${co.name.split('/')[0]} invested in ${INVEST_AREAS[weights.indexOf(Math.max(...weights))].name}`);
+  });
+
+  // Pick event
+  const evIdx = Math.floor(Math.random() * EVENTS.length);
+  pendingEvent = EVENTS[evIdx];
+  showEventOverlay(pendingEvent);
+}
+
+function showEventOverlay(ev){
+  document.getElementById('evOverlay').classList.add('on');
+  document.getElementById('evoType').textContent = ev.type;
+  document.getElementById('evoTitle').textContent = ev.title;
+  document.getElementById('evoDesc').textContent = ev.desc;
+  document.getElementById('evoQ').textContent = '💭 ' + ev.question;
+  // Generate effects display
+  const efEl = document.getElementById('evoEffects');
+  efEl.innerHTML = '';
+  const efDescs = generateEventEffectDesc(ev);
+  efDescs.forEach(ef => {
+    const d = document.createElement('div');
+    d.className = 'evo-ef';
+    d.innerHTML = `<div class="evo-ef-icon">${ef.icon}</div><div class="evo-ef-body"><div class="evo-ef-name">${ef.name}</div><div class="evo-ef-desc">${ef.desc}</div></div>`;
+    efEl.appendChild(d);
+  });
+}
+
+function generateEventEffectDesc(ev){
+  const effects = [];
+  if(ev.id === 'breakthrough'){
+    const leader = [...COMPANIES].sort((a,b)=>companies[b.id].stats.research-companies[a.id].stats.research)[0];
+    effects.push({icon:leader.icon, name:leader.name+' leads', desc:'Research breakthrough: +15 developer and healthcare share. Others get -5 as the capability gap widens.'});
+    effects.push({icon:'📊', name:'Market shift', desc:'Developer segment reorients around the new capability leader for this quarter.'});
+  } else if(ev.id === 'regulation'){
+    effects.push({icon:'⚖️', name:'EU enforcement', desc:'Companies with safety score below 65 are locked out of enterprise segment for 1 round.'});
+    effects.push({icon:'🛡️', name:'Safety premium', desc:'Companies with safety > 80 get +10% enterprise segment bonus.'});
+  } else if(ev.id === 'open_source'){
+    effects.push({icon:'🔓', name:'Meta ecosystem boost', desc:'Meta gains +15 ecosystem score. Developer API pricing pressure for all companies.'});
+    effects.push({icon:'⚡', name:'Developer segment shift', desc:'Price competition intensifies — capability matters more than GTM this quarter in developer segment.'});
+  } else if(ev.id === 'enterprise_breach'){
+    effects.push({icon:'🔒', name:'Trust crisis', desc:'Companies with safety <65 lose 15% enterprise share. Safety scores matter 2x this quarter.'});
+    effects.push({icon:'✅', name:'Safe companies benefit', desc:'Companies with safety >80 gain enterprise share as buyers shift to trusted providers.'});
+  } else if(ev.id === 'consumer_backlash'){
+    effects.push({icon:'📉', name:'Consumer market drops 15%', desc:'Backlash reduces consumer segment appetite across all providers for this quarter.'});
+    effects.push({icon:'🏢', name:'Enterprise accelerates', desc:'Enterprise buyers shift budget to AI as consumer trust falls. Enterprise segment grows.'});
+  } else {
+    effects.push({icon:'📊', name:'Market shift', desc:'This event reshapes competitive dynamics this quarter. See the updated market share after results.'});
+  }
+  return effects;
+}
+
+function closeEvent(){
+  document.getElementById('evOverlay').classList.remove('on');
+  // Apply event effects
+  applyEventEffects(pendingEvent);
+  // Recompute market share
+  simulateMarket();
+  // Show results
+  showResults();
+}
+
+function applyEventEffects(ev){
+  if(!ev) return;
+  if(ev.id === 'breakthrough'){
+    const leader = [...COMPANIES].sort((a,b)=>companies[b.id].stats.research-companies[a.id].stats.research)[0];
+    companies[leader.id].stats.research = Math.min(100, companies[leader.id].stats.research + 15);
+    companies[leader.id].stats.ecosystem = Math.min(100, companies[leader.id].stats.ecosystem + 10);
+    addLog(`🧬 Breakthrough: ${leader.name} research surged to ${companies[leader.id].stats.research}`);
+  } else if(ev.id === 'regulation'){
+    COMPANIES.forEach(co => {
+      if(companies[co.id].stats.safety < 65){
+        companies[co.id].regulationLocked = true;
+        addLog(`⚖️ ${co.name} locked out of enterprise (safety ${companies[co.id].stats.safety} < 65)`);
+      } else {
+        companies[co.id].regulationLocked = false;
+      }
+    });
+  } else if(ev.id === 'open_source'){
+    companies['meta'].stats.ecosystem = Math.min(100, companies['meta'].stats.ecosystem + 15);
+    addLog('🔓 Meta ecosystem boosted by open-source release');
+  } else if(ev.id === 'enterprise_breach'){
+    COMPANIES.forEach(co => {
+      if(companies[co.id].stats.safety < 65){
+        companies[co.id].share.enterprise *= 0.85;
+        addLog(`🔒 ${co.name} enterprise share hit by trust crisis`);
+      } else if(companies[co.id].stats.safety > 80){
+        companies[co.id].share.enterprise *= 1.10;
+        addLog(`✅ ${co.name} enterprise share boosted (safety premium)`);
+      }
+    });
+  } else if(ev.id === 'consumer_backlash'){
+    COMPANIES.forEach(co => { companies[co.id].share.consumer *= 0.85; });
+    addLog('📉 Consumer backlash: all consumer share reduced 15%');
+  } else if(ev.id === 'hyperscaler'){
+    COMPANIES.forEach(co => {
+      if(companies[co.id].stats.ecosystem > 70){
+        companies[co.id].stats.gtm = Math.min(100, companies[co.id].stats.gtm + 8);
+        addLog(`🌩️ ${co.name} GTM boosted by hyperscaler deal`);
+      }
+    });
+  } else if(ev.id === 'talent_war'){
+    COMPANIES.filter(co => (allocation[co.id]||0) < 15 || co.id !== playerCoId).forEach(co => {
+      if(companies[co.id].stats.research > 0){
+        companies[co.id].stats.research = Math.max(20, companies[co.id].stats.research - 8);
+        addLog(`🧑‍💻 Talent loss: ${co.name} research dropped`);
+      }
+    });
+  }
+}
+
+function simulateMarket(){
+  SEGMENTS.forEach(seg => {
+    let total = 0;
+    const scores = {};
+    COMPANIES.forEach(co => {
+      scores[co.id] = computeSegmentScore(co.id, seg.id);
+      total += scores[co.id];
+    });
+    // Blend: 60% recomputed, 40% existing (sticky market share)
+    COMPANIES.forEach(co => {
+      const newShare = total > 0 ? (scores[co.id]/total)*seg.size : seg.size/COMPANIES.length;
+      companies[co.id].share[seg.id] = companies[co.id].share[seg.id]*0.40 + newShare*0.60;
+    });
+  });
+  updateTotalShare();
+  COMPANIES.forEach(co => shareHistory[co.id].push(companies[co.id].totalShare));
+  renderRoster();
+  renderSegments();
+  drawTrend();
+}
+
+function showResults(){
+  const sorted = [...COMPANIES].sort((a,b) => companies[b.id].totalShare - companies[a.id].totalShare);
+  document.getElementById('roTitle').textContent = `Round ${round} Results`;
+  document.getElementById('roRound').textContent = QUARTERS[round-1];
+  const rowsEl = document.getElementById('roRows');
+  rowsEl.innerHTML = '';
+  sorted.forEach((co, rank) => {
+    const state = companies[co.id];
+    const prev = shareHistory[co.id];
+    const delta = prev.length > 1 ? state.totalShare - prev[prev.length-2] : 0;
+    const row = document.createElement('div');
+    row.className = 'ro-row';
+    const dClass = delta > 0.5 ? 'pi-pos' : delta < -0.5 ? 'pi-neg' : '';
+    row.innerHTML = `
+      <div class="ro-co" style="color:${co.color}">${co.icon} ${co.name.split('/')[0].trim()}${co.id===playerCoId?'<span style="font-size:9px;background:rgba(79,142,247,.2);color:#4f8ef7;padding:1px 5px;border-radius:8px;margin-left:4px">YOU</span>':''}</div>
+      <div class="ro-bar-wrap"><div class="ro-bar" style="width:${state.totalShare/40*100}%;background:${co.color}"></div></div>
+      <div class="ro-pct" style="color:${co.color}">${state.totalShare.toFixed(1)}% <span class="pi-change ${dClass}" style="font-size:9px">${delta>0?'+':''} ${delta.toFixed(1)}</span></div>
+    `;
+    rowsEl.appendChild(row);
+  });
+
+  const insight = INSIGHTS[Math.floor(Math.random()*INSIGHTS.length)](round);
+  document.getElementById('roInsight').textContent = insight;
+
+  const nextBtn = document.getElementById('roNext');
+  if(round >= 6){
+    nextBtn.textContent = 'View Final Results →';
+    nextBtn.onclick = showEndGame;
+  } else {
+    nextBtn.textContent = `Enter Round ${round+1} →`;
+    nextBtn.onclick = nextRound;
+  }
+
+  document.getElementById('resultOverlay').classList.add('on');
+}
+
+function nextRound(){
+  document.getElementById('resultOverlay').classList.remove('on');
+  COMPANIES.forEach(co => companies[co.id].regulationLocked = false);
+  round++;
+  allocation = {};
+  INVEST_AREAS.forEach(a => allocation[a.id] = 10);
+  // Re-add segment card event card placeholder
+  document.getElementById('currentEventCard').style.display = 'none';
+  renderGame();
+}
+
+function showEndGame(){
+  document.getElementById('resultOverlay').classList.remove('on');
+  document.getElementById('gameScreen').classList.remove('active');
+  document.getElementById('endScreen').classList.add('active');
+
+  const sorted = [...COMPANIES].sort((a,b) => companies[b.id].totalShare - companies[a.id].totalShare);
+  const winner = sorted[0];
+  const playerFinal = companies[playerCoId];
+  const playerRank = sorted.findIndex(c => c.id === playerCoId) + 1;
+
+  document.getElementById('endTitle').textContent = playerCoId === winner.id ? '🏆 Market Leader' : playerRank === 2 ? '🥈 Strong Challenger' : playerRank === 3 ? '🥉 Competitive Position' : '📉 Market Contender';
+  document.getElementById('endSub').textContent = `${COMPANIES.find(c=>c.id===playerCoId).name} finished ${playerRank===1?'1st — dominant market position':playerRank===2?'2nd — a credible challenger':playerRank===3?'3rd — competitive but constrained':'in the bottom half — significant strategic pivots needed'}. Final share: ${playerFinal.totalShare.toFixed(1)}%.`;
+
+  const rowsEl = document.getElementById('endRows');
+  rowsEl.innerHTML = '';
+  sorted.forEach((co, rank) => {
+    const state = companies[co.id];
+    const row = document.createElement('div');
+    row.className = 'end-row' + (rank===0?' winner':'');
+    row.innerHTML = `
+      <div class="end-co" style="color:${co.color}"><span class="end-trophy">${rank===0?'🏆':rank===1?'🥈':rank===2?'🥉':'📉'}</span>${co.name}</div>
+      <div class="end-bar-wrap"><div class="end-bar" style="width:${state.totalShare/40*100}%;background:${co.color}"></div></div>
+      <div class="end-pct" style="color:${co.color}">${state.totalShare.toFixed(1)}%</div>
+    `;
+    rowsEl.appendChild(row);
+  });
+
+  const dq = DEBRIEF_QS.sort(()=>Math.random()-.5).slice(0,3);
+  document.getElementById('endDebrief').innerHTML = `<div class="ed-head">📋 Debrief Questions</div>${dq.map(q=>`<div class="ed-q">${q}</div>`).join('')}`;
+}
+
+function goHome(){ document.getElementById('gameScreen').classList.remove('active'); document.getElementById('welcomeScreen').classList.add('active'); round=1;allocation={}; }
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+buildWelcome();
+INVEST_AREAS.forEach(a => allocation[a.id] = 10);
+</script>
+</body>
+</html>
