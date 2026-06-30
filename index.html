@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -560,9 +560,9 @@ function startGame(){
   initMarketShare();
   COMPANIES.forEach(co => shareHistory[co.id] = [companies[co.id].totalShare]);
 
-  document.getElementById('welcomeScreen').classList.remove('active');
-  document.getElementById('gameScreen').classList.add('active');
-  renderGame();
+  document.getElementById('welcomeScreen').style.display = 'none';
+  document.getElementById('gameScreen').style.display = 'block';
+  setTimeout(() => renderGame(), 20);
 }
 
 function initMarketShare(){
@@ -793,7 +793,7 @@ function drawTrend(){
   const cv = document.getElementById('trendCanvas');
   if(!cv) return;
   const dpr = window.devicePixelRatio||1;
-  const w = cv.parentElement.clientWidth - 20 || 180;
+  const w = Math.max(120, (cv.parentElement.clientWidth || 220) - 20);
   cv.width = w*dpr; cv.height = 80*dpr; cv.style.width = w+'px'; cv.style.height = '80px';
   const ctx = cv.getContext('2d'); ctx.scale(dpr,dpr);
   ctx.clearRect(0,0,w,80);
@@ -1025,8 +1025,8 @@ function nextRound(){
 
 function showEndGame(){
   document.getElementById('resultOverlay').classList.remove('on');
-  document.getElementById('gameScreen').classList.remove('active');
-  document.getElementById('endScreen').classList.add('active');
+  document.getElementById('gameScreen').style.display='none';
+  const es=document.getElementById('endScreen');es.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;background:radial-gradient(ellipse at 50% 30%,rgba(79,142,247,.1) 0%,transparent 70%)';
 
   const sorted = [...COMPANIES].sort((a,b) => companies[b.id].totalShare - companies[a.id].totalShare);
   const winner = sorted[0];
@@ -1054,7 +1054,7 @@ function showEndGame(){
   document.getElementById('endDebrief').innerHTML = `<div class="ed-head">📋 Debrief Questions</div>${dq.map(q=>`<div class="ed-q">${q}</div>`).join('')}`;
 }
 
-function goHome(){ document.getElementById('gameScreen').classList.remove('active'); document.getElementById('welcomeScreen').classList.add('active'); round=1;allocation={}; }
+function goHome(){ document.getElementById('gameScreen').style.display='none'; document.getElementById('welcomeScreen').style.display='flex'; round=1;allocation={}; }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 buildWelcome();
