@@ -240,7 +240,7 @@ body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg)
 <!-- ══ WELCOME ══════════════════════════════════════════════════════════════ -->
 <div class="screen active" id="welcomeScreen">
 <div class="wlc-wrap">
-  <div class="wlc-badge">🚀 AI Strategy Simulation · Resource-Constrained Market</div>
+  <div class="wlc-badge">🚀 AI Strategy Simulation · Resource-Constrained Market <span style="margin-left:8px;opacity:.5;font-size:9px">v4</span></div>
   <div class="wlc-title">AI Frontier</div>
   <div class="wlc-sub">You lead an AI company competing for market dominance in 6 quarterly rounds. Allocate limited R&D, product, and GTM budgets. Navigate market events. Watch your decisions ripple through the competitive landscape.</div>
 
@@ -379,6 +379,17 @@ body{font-family:-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg)
   </div>
 </div>
 
+<script>
+// Global error handler — shows errors on-screen so we can debug
+window.onerror = function(msg, src, line, col, err) {
+  var d = document.createElement('div');
+  d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;padding:14px 18px;font-family:monospace;font-size:13px;white-space:pre-wrap';
+  d.textContent = 'JS ERROR: ' + msg + '\nLine ' + line + ', Col ' + col + (err ? '\n' + err.stack : '');
+  document.body.appendChild(d);
+  return true;
+};
+console.log('[AI Frontier v4] Script starting...');
+</script>
 <script>
 // ── COMPANY DATA ─────────────────────────────────────────────────────────────
 const COMPANIES = [
@@ -543,26 +554,41 @@ function pickDiff(d, btn){
 
 // ── INIT GAME ─────────────────────────────────────────────────────────────────
 function startGame(){
-  // Deep clone company stats
-  companies = {};
-  COMPANIES.forEach(co => {
-    companies[co.id] = {
-      ...co,
-      stats: {...co.stats},
-      share: {enterprise:0, developer:0, consumer:0, government:0, healthcare:0},
-      totalShare: 0,
-      budget: co.budget,
-      regulationLocked: false,
-      eventEffect: {}
-    };
-  });
-  // Distribute initial market share based on stats
-  initMarketShare();
-  COMPANIES.forEach(co => shareHistory[co.id] = [companies[co.id].totalShare]);
+  console.log('[AI Frontier] startGame called, playerCoId=', playerCoId);
+  try {
+    // Deep clone company stats
+    companies = {};
+    COMPANIES.forEach(function(co) {
+      companies[co.id] = {
+        id: co.id, name: co.name, icon: co.icon, color: co.color,
+        tagline: co.tagline, advantage: co.advantage, constraint: co.constraint,
+        budgetLabel: co.budgetLabel,
+        stats: {research:co.stats.research, product:co.stats.product, gtm:co.stats.gtm, safety:co.stats.safety, ecosystem:co.stats.ecosystem},
+        share: {enterprise:0, developer:0, consumer:0, government:0, healthcare:0},
+        totalShare: 0,
+        budget: co.budget,
+        regulationLocked: false,
+        eventEffect: {}
+      };
+    });
+    // Distribute initial market share based on stats
+    initMarketShare();
+    COMPANIES.forEach(function(co) { shareHistory[co.id] = [companies[co.id].totalShare]; });
 
-  document.getElementById('welcomeScreen').style.display = 'none';
-  document.getElementById('gameScreen').style.display = 'block';
-  setTimeout(() => renderGame(), 20);
+    var ws = document.getElementById('welcomeScreen');
+    var gs = document.getElementById('gameScreen');
+    if (!ws || !gs) { alert('Error: screen elements not found'); return; }
+    ws.style.display = 'none';
+    gs.style.display = 'block';
+    console.log('[AI Frontier] screens switched, scheduling renderGame');
+    setTimeout(function() {
+      try { renderGame(); console.log('[AI Frontier] renderGame done'); }
+      catch(e) { console.error('[AI Frontier] renderGame error:', e); alert('renderGame error: ' + e.message); }
+    }, 20);
+  } catch(e) {
+    console.error('[AI Frontier] startGame error:', e);
+    alert('startGame error: ' + e.message + '\n' + (e.stack||''));
+  }
 }
 
 function initMarketShare(){
@@ -1057,8 +1083,13 @@ function showEndGame(){
 function goHome(){ document.getElementById('gameScreen').style.display='none'; document.getElementById('welcomeScreen').style.display='flex'; round=1;allocation={}; }
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-buildWelcome();
-INVEST_AREAS.forEach(a => allocation[a.id] = 10);
+try {
+  buildWelcome();
+  INVEST_AREAS.forEach(function(a) { allocation[a.id] = 10; });
+  console.log('[AI Frontier v4] Script fully loaded. startGame is', typeof startGame);
+} catch(e) {
+  console.error('[AI Frontier] Init error:', e);
+}
 </script>
 </body>
 </html>
